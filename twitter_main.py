@@ -1,3 +1,4 @@
+import os
 import re
 from serpapi import GoogleSearch
 from textblob import TextBlob
@@ -23,41 +24,38 @@ def sentiment_score(text):
     """Get polarity score from -1 (negative) to +1 (positive)"""
     return TextBlob(text).sentiment.polarity
 
-# --------- Fetch YouTube Results ---------
-def fetch_youtube_results(query, num_results=5):
-    """Search YouTube videos using SerpAPI"""
+# --------- Fetch Twitter Results ---------
+def fetch_twitter_results(query, num_results=10):
+    """Search recent tweets using SerpAPI"""
     search = GoogleSearch({
-        "engine": "youtube",
-        "search_query": query,
+        "engine": "twitter",
+        "q": query,
         "api_key": SERPAPI_KEY
     })
     results = search.get_dict()
-
-    videos = results.get("video_results", [])[:num_results]
-    return videos
+    tweets = results.get("tweets", [])[:num_results]
+    return tweets
 
 # --------- Analyze Results ---------
-def analyze_videos(videos):
+def analyze_tweets(tweets):
     summary = {
         "mentions": { "atomberg": 0, "usha": 0, "havells": 0, "orient": 0, "crompton": 0, "luminous": 0 },
         "sentiment": { "atomberg": [], "others": [] }
     }
 
-    for vid in videos:
-        title = vid.get("title", "")
-        desc = vid.get("description", "")
-        channel = vid.get("channel", {}).get("name", "")
-
-        text = f"{title} {desc} {channel}"
+    for tweet in tweets:
+        text = tweet.get("content", "") or tweet.get("text", "")
+        username = tweet.get("username", "")
+        full_text = f"{text} {username}"
 
         # Mentions
-        counts = extract_mentions(text)
+        counts = extract_mentions(full_text)
         for brand, c in counts.items():
             summary["mentions"][brand] += c
 
         # Sentiment
-        score = sentiment_score(text)
-        if "atomberg" in text.lower():
+        score = sentiment_score(full_text)
+        if "atomberg" in full_text.lower():
             summary["sentiment"]["atomberg"].append(score)
         else:
             summary["sentiment"]["others"].append(score)
@@ -91,18 +89,19 @@ def compute_sov(summary):
 
 # --------- Main ---------
 def main():
-    query = "best fan in India"
-    videos = fetch_youtube_results(query, num_results=5)
+    query = "Atomberg reviews"
+    tweets = fetch_twitter_results(query, num_results=15)
 
-    print(f"🔍 Found {len(videos)} YouTube videos for query '{query}'")
+    print(f"🔍 Found {len(tweets)} tweets for query '{query}'")
 
-    for i, vid in enumerate(videos, 1):
-        title = vid.get("title", "No title")
-        link = vid.get("link", "No link")   # ✅ fixed: use link instead of video_id
-        print(f"{i}. {title}\n   {link}")
+    for i, tweet in enumerate(tweets, 1):
+        text = tweet.get("content", "") or tweet.get("text", "")
+        username = tweet.get("username", "")
+        link = tweet.get("link", "No link")
+        print(f"{i}. @{username}: {text[:100]}...\n   {link}")
 
     # Analyze
-    summary = analyze_videos(videos)
+    summary = analyze_tweets(tweets)
     sov = compute_sov(summary)
 
     print("\n📊 Brand Mentions:", summary["mentions"])
