@@ -1056,7 +1056,7 @@
 from agents.agent import create_google_crew, create_youtube_crew
 
 if __name__ == "__main__":
-    query = "Atomberg fan reviews"   # you can make this dynamic later
+    query = "Best ceiling fan in India"   # you can make this dynamic later
 
     # Run Google Crew
     google_crew = create_google_crew(query, num_results=15)
