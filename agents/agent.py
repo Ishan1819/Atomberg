@@ -1,10 +1,9 @@
 from crewai import Agent, Task, Crew
 from tools.google_tool import GoogleTool
 from tools.youtube_tool import YouTubeTool
-from tools.amazon_tool import AmazonTool
 from tools.insight_tool import InsightTool
 from llm.litellm_wrapper import LiteLLMWrapper
-from models import InsightOutput  # Import both models
+from models import InsightOutput  
 import json
 
 gemini_llm = LiteLLMWrapper(model="gemini/gemini-1.5-flash")

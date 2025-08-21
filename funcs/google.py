@@ -12,14 +12,12 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# CONFIG
 SERPAPI_KEY = "84abd1561ae6f81ea2f3ecd5df1c401191c1a93f38d2ec1b19b3f5d9a3e64e8b"
 COUNTRY = "in"
 LANG = "en"
 LOCATION = "Mumbai,Maharashtra,India"
 BRANDS = ["Atomberg", "Crompton", "Havells", "Orient", "Usha", "Bajaj", "Luminous", "Polar"]
 
-# Initialize
 try:
     nltk.data.find("sentiment/vader_lexicon.zip")
 except LookupError:
@@ -32,7 +30,7 @@ HEADERS = {
 }
 
 def serpapi_search(query: str, num: int = 10) -> List[Dict]:
-    """Search using SerpAPI"""
+    # search using serp api
     params = {
         "engine": "google",
         "q": query,
@@ -48,11 +46,11 @@ def serpapi_search(query: str, num: int = 10) -> List[Dict]:
         res = search.get_dict()
         return res.get("organic_results", [])
     except Exception as e:
-        print(f"❌ SerpAPI error: {e}")
+        print(f"SerpAPI error: {e}")
         return []
 
 def scrape_basic_content(url: str) -> Dict:
-    """Basic content scraping"""
+    # basic scraping (may miss some cases)
     try:
         r = requests.get(url, headers=HEADERS, timeout=10)
         if r.status_code != 200:
@@ -60,35 +58,32 @@ def scrape_basic_content(url: str) -> Dict:
 
         soup = BeautifulSoup(r.text, "html.parser")
         
-        # Remove unwanted elements
         for tag in soup(["script", "style", "nav", "header", "footer"]):
             tag.decompose()
 
-        # Get main content
         content = ""
         for p in soup.find_all("p"):
             text = p.get_text(strip=True)
-            if len(text) > 20:
+            if len(text) > 20:  # kinda arbitrary
                 content += text + " "
 
-        # Get reviews (simple approach)
         reviews = []
         review_selectors = ["div[class*='review']", "div[class*='comment']", "div[class*='feedback']"]
         for sel in review_selectors:
             for el in soup.select(sel):
                 text = el.get_text(strip=True)
-                if 15 < len(text) < 500:
+                if 15 < len(text) < 500:  # ignoring too small/too big
                     reviews.append(text)
 
         return {
-            "content": content[:1000],  # Limit content
-            "reviews": reviews[:5]      # Limit reviews
+            "content": content[:1000],  
+            "reviews": reviews[:5]     
         }
     except Exception as e:
         return {"content": "", "reviews": [], "error": str(e)}
 
 def count_brand_mentions(text: str) -> Dict[str, int]:
-    """Count brand mentions in text"""
+    # check brand mentions
     if not text:
         return {brand: 0 for brand in BRANDS}
     
@@ -103,7 +98,7 @@ def count_brand_mentions(text: str) -> Dict[str, int]:
     return mentions
 
 def analyze_sentiment(text: str) -> str:
-    """Simple sentiment analysis"""
+    # quick sentiment check (not very deep)
     if not text.strip():
         return "neutral"
     
@@ -118,13 +113,11 @@ def analyze_sentiment(text: str) -> str:
         return "neutral"
 
 def main(query: str, num_results: int = 5) -> Dict:
-    """Main function that returns results"""
-    print(f"🔍 Searching for: {query}")
+    print(f"Searching for: {query}")
     
     if not SERPAPI_KEY:
         return {"error": "Missing SERPAPI_KEY"}
     
-    # Search Google
     search_results = serpapi_search(query, num_results)
     
     if not search_results:
@@ -139,21 +132,16 @@ def main(query: str, num_results: int = 5) -> Dict:
             url = result.get("link", "")
             snippet = result.get("snippet", "")
             
-            print(f"📄 [{i}] Processing: {title[:50]}...")
+            print(f"[{i}] Processing: {title[:50]}...")
             
-            # Scrape content
             scraped = scrape_basic_content(url)
             
-            # Combine all text for analysis
             all_text = f"{title} {snippet} {scraped['content']} {' '.join(scraped['reviews'])}"
             
-            # Count brand mentions
             mentions = count_brand_mentions(all_text)
             
-            # Analyze sentiment
             sentiment = analyze_sentiment(all_text)
             
-            # Update brand analysis
             for brand, count in mentions.items():
                 if count > 0:
                     brand_analysis[brand]["mentions"] += count
@@ -174,16 +162,14 @@ def main(query: str, num_results: int = 5) -> Dict:
             print(f"Error processing result {i}: {e}")
             continue
         
-        # Add delay to be respectful
-        time.sleep(random.uniform(0.5, 1.0))
+        time.sleep(random.uniform(0.5, 1.0))  # just to avoid blocking
     
-    # Calculate Share of Voice  
     try:
         total_mentions = sum(brand_data["mentions"] for brand_data in brand_analysis.values())
-        print(f"🔢 Total mentions calculated: {total_mentions}")
+        print(f"Total mentions calculated: {total_mentions}")
     except Exception as e:
         print(f"Error calculating total mentions: {e}")
-        total_mentions = 1  # Avoid division by zero
+        total_mentions = 1  
     
     sov_summary = {}
     for brand, data in brand_analysis.items():
@@ -193,7 +179,6 @@ def main(query: str, num_results: int = 5) -> Dict:
         else:
             sov_percentage = 0
             
-        # Calculate sentiment distribution
         sentiments = data["sentiment"]
         sentiment_dist = {
             "positive": sentiments.count("positive"),
@@ -208,10 +193,8 @@ def main(query: str, num_results: int = 5) -> Dict:
             "pages_mentioned": len(sentiments)
         }
     
-    # Sort brands by SOV
     top_brands = sorted(sov_summary.items(), key=lambda x: x[1]["sov_percentage"], reverse=True)
     
-    # Return comprehensive results
     return {
         "query": query,
         "total_results": len(processed_results),

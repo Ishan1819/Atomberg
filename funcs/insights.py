@@ -1,31 +1,32 @@
-# import google.generativeai as genai
-# import os
+import google.generativeai as genai
+import os
 
-# # Configure Gemini / OpenAI / any LLM
-# genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+# setup api key
+genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
-# def generate_final_insights(query, google_data, youtube_data):
-#     """
-#     Combines Google + YouTube analysis into one unified brand insight report.
-#     """
-#     prompt = f"""
-#     You are a marketing strategist. Analyze brand insights for query: {query}.
+def generate_final_insights(query, google_data, youtube_data):
+    """merge google + youtube analysis into one report"""
 
-#     --- GOOGLE DATA ---
-#     {google_data}
+    # build the prompt for gemini
+    prompt = f"""
+    You are a marketing strategist. Analyze brand insights for query: {query}.
 
-#     --- YOUTUBE DATA ---
-#     {youtube_data}
+    --- GOOGLE DATA ---
+    {google_data}
 
-#     TASKS:
-#     1. Extract common themes & insights across both platforms.
-#     2. Highlight customer sentiment (positive, negative, mixed).
-#     3. Identify competitor mentions and comparisons.
-#     4. Provide clear recommendations for Atomberg’s marketing & content team.
-#     5. Suggest at least 3 actionable strategies (SEO keywords, campaign angles, influencer ideas).
-#     """
+    --- YOUTUBE DATA ---
+    {youtube_data}
 
-#     model = genai.GenerativeModel("gemini-1.5-flash")
-#     response = model.generate_content(prompt)
+    TASKS:
+    1. Extract common themes & insights across both platforms.
+    2. Highlight customer sentiment (positive, negative, mixed).
+    3. Identify competitor mentions and comparisons.
+    4. Provide clear recommendations for Atomberg’s marketing & content team.
+    5. Suggest at least 3 actionable strategies (SEO keywords, campaign angles, influencer ideas).
+    """
 
-#     return response.text
+    # call the model
+    model = genai.GenerativeModel("gemini-1.5-flash")
+    response = model.generate_content(prompt)
+
+    return response.text

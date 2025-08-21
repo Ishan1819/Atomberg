@@ -16,7 +16,6 @@ class GoogleTool(BaseTool):
             if "error" in results:
                 return f"Error: {results['error']}"
             
-            # Format results for the agent
             formatted_output = f"""
 SEARCH ANALYSIS FOR: {results['query']}
 RESULTS: {results['total_results']} pages analyzed
@@ -36,12 +35,10 @@ ATOMBERG PERFORMANCE:
 KEY FINDINGS:
 """
             
-            # Add key findings from top results
             for i, result in enumerate(results['results'][:3], 1):
                 brands_found = ', '.join(result['brands_found']) if result['brands_found'] else 'None'
                 formatted_output += f"{i}. {result['title'][:80]}...\n   Brands mentioned: {brands_found} | Sentiment: {result['sentiment']}\n"
             
-            # Add raw data for further processing
             formatted_output += f"\nRAW DATA:\n{json.dumps(results['summary'], indent=2)}"
             
             return formatted_output
