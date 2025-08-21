@@ -18,22 +18,22 @@ class GoogleTool(BaseTool):
             
             # Format results for the agent
             formatted_output = f"""
-🔍 SEARCH ANALYSIS FOR: {results['query']}
-📊 RESULTS: {results['total_results']} pages analyzed
+SEARCH ANALYSIS FOR: {results['query']}
+RESULTS: {results['total_results']} pages analyzed
 
-🏆 TOP BRANDS BY SHARE OF VOICE:
+TOP BRANDS BY SHARE OF VOICE:
 """
             
             for brand, data in results['top_brands'].items():
                 formatted_output += f"• {brand}: {data['sov_percentage']}% ({data['mentions']} mentions, {data['pages_mentioned']} pages)\n"
             
             formatted_output += f"""
-🎯 ATOMBERG PERFORMANCE:
+ATOMBERG PERFORMANCE:
 • Share of Voice: {results['summary']['atomberg_sov']}%
 • Total Mentions: {results['summary']['atomberg_mentions']}
 • Brand Ranking: #{list(results['top_brands'].keys()).index('Atomberg') + 1 if 'Atomberg' in results['top_brands'] else 'Not in top 5'}
 
-📄 KEY FINDINGS:
+KEY FINDINGS:
 """
             
             # Add key findings from top results
@@ -42,7 +42,7 @@ class GoogleTool(BaseTool):
                 formatted_output += f"{i}. {result['title'][:80]}...\n   Brands mentioned: {brands_found} | Sentiment: {result['sentiment']}\n"
             
             # Add raw data for further processing
-            formatted_output += f"\n📈 RAW DATA:\n{json.dumps(results['summary'], indent=2)}"
+            formatted_output += f"\nRAW DATA:\n{json.dumps(results['summary'], indent=2)}"
             
             return formatted_output
             
